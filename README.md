@@ -1,13 +1,13 @@
 ## Reproduction repo for OpenFaaS grace period termination
 
-dependencies:
+### non-standard dependencies:
 - [helmfile](https://github.com/roboll/helmfile)
 - [tilt](tilt.dev)
 
-to start:
+### to start:
 1. `tilt up`
 
-to reproduce:
+### to reproduce:
 1. invoke function with default `SLEEP_DURATION` of `2m`
 2. delete the pod working on it
 3. you should receive a 500 of "Can't reach service for: sleep.openfaas-fn."
