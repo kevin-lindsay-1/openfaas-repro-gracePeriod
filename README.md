@@ -3,6 +3,15 @@
 ### non-standard dependencies:
 - [helmfile](https://github.com/roboll/helmfile)
 - [tilt](tilt.dev)
+- installation of openfaas using the `faas-netes/openfaas` chart, with the following settings:
+```yaml
+# timeouts in this chart should be >2m
+
+# replaces faas-netes with openfaas-operator
+operator:
+  create: true
+  createCRD: true
+```
 
 ### to start:
 1. `tilt up`
