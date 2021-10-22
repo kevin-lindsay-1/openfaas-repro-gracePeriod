@@ -1,0 +1,40 @@
+{{- range $target := $.Values.function.targets }}
+apiVersion: openfaas.com/v1
+kind: Function
+metadata:
+  name: {{ $.Values.function.name }}
+  namespace: {{ $.Release.Namespace }}
+spec:
+  name: {{ $.Values.function.name }}
+  {{- if not (empty (dig "digest" nil $target)) }}
+  image: {{ printf "%s:%s@%s" $.Values.function.image.repository $.Values.function.image.tag $target.digest }}
+  {{- else }}
+  image: {{ printf "%s:%s" $.Values.function.image.repository $.Values.function.image.tag }}
+  {{- end }}
+  {{- if $.Values.function.annotations }}
+  annotations:
+    {{- range $key, $value := $.Values.function.annotations }}
+    {{ $key }}: {{ $value | toString | quote }} 
+    {{- end }}
+  {{- end }}
+  {{- if $.Values.function.environment }}
+  environment:
+    {{- range $key, $value := $.Values.function.environment }}
+    {{ $key }}: {{ $value | toString | quote }} 
+    {{- end }}
+  {{- end }}
+  {{- if $.Values.function.labels }}
+  labels:
+    {{- range $key, $value := $.Values.function.labels }}
+    {{ $key }}: {{ $value | toString | quote }} 
+    {{- end }}
+  {{- end }}
+  requests:
+    cpu: {{ $.Values.function.requests.cpu }}
+    memory: {{ $.Values.function.requests.memory }}
+  limits:
+    cpu: {{ $.Values.function.limits.cpu }}
+    memory: {{ $.Values.function.limits.memory }}
+  secrets: {{ $.Values.function.secrets }}
+---
+{{- end }}

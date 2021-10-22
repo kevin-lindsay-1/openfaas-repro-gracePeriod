@@ -1,0 +1,8 @@
+{
+  "files.associations": {
+    "**/k8s/*.yaml": "helm",
+    "**/k8s/**/*.yaml": "helm",
+    "**/k8s/**/*.yaml.gotmpl": "helm",
+    "**/*Tiltfile": "starlark"
+  }
+}

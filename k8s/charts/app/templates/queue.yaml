@@ -1,0 +1,106 @@
+{{ if $.Values.queue.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: openfaas
+    component: queue-worker
+  name: {{ $.Values.queue.name }}-queue-worker
+  namespace: openfaas
+spec:
+  progressDeadlineSeconds: 600
+  replicas: {{ $.Values.queue.worker.replicas }}
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: {{ $.Values.queue.name }}-queue-worker
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        prometheus.io.scrape: "false"
+      labels:
+        app: {{ $.Values.queue.name }}-queue-worker
+    spec:
+      containers:
+        - env:
+            - name: faas_nats_address
+              value: nats.openfaas.svc.cluster.local
+            - name: faas_nats_channel
+              value: {{ $.Values.queue.name }}
+            - name: faas_nats_queue_group
+              value: faas
+            - name: faas_gateway_address
+              value: gateway.openfaas.svc.cluster.local
+            - name: gateway_invoke
+              value: "true"
+            - name: faas_function_suffix
+              value: .openfaas-fn.svc.cluster.local
+            - name: max_inflight
+              value: {{ $.Values.queue.maxInflight | int | quote }}
+            - name: ack_wait
+              value: {{ $.Values.queue.ackWait }}
+            - name: secret_mount_path
+              value: /var/secrets/gateway
+            - name: basic_auth
+              value: "true"
+            {{- if $.Values.queue.worker.pro.enabled }}
+            - name: max_retry_attempts
+              value: {{ $.Values.queue.maxRetryAttempts | int | quote }}
+            - name: max_retry_wait
+              value: {{ $.Values.queue.maxRetryWait }}
+            - name: initial_retry_wait
+              value: {{ $.Values.queue.initialRetryWait }}
+            - name: retry_http_codes
+              value: {{ $.Values.queue.retryHTTPCodes }}
+            {{- end }}
+          {{- if $.Values.queue.worker.pro.enabled }}
+          command:
+            - /worker
+            - -license-file=/var/secrets/license/license
+          {{- end }}
+          {{- if $.Values.queue.worker.pro.enabled }}
+          image: {{ $.Values.queue.worker.pro.repository }}:{{ $.Values.queue.worker.pro.tag }}
+          {{ else }}
+          image: {{ $.Values.queue.worker.repository }}:{{ $.Values.queue.worker.tag }}
+          {{- end -}}
+          imagePullPolicy: IfNotPresent
+          name: {{ $.Values.queue.name }}-queue-worker
+          resources:
+            requests:
+              cpu: 50m
+              memory: 120Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /var/secrets/gateway
+              name: auth
+              readOnly: true
+            {{- if $.Values.queue.worker.pro.enabled }}
+            - mountPath: /var/secrets/license
+              name: license
+              readOnly: true
+            {{- end }}
+      dnsPolicy: ClusterFirst
+      nodeSelector:
+        beta.kubernetes.io/arch: amd64
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: auth
+          secret:
+            defaultMode: 420
+            secretName: basic-auth
+        {{- if $.Values.queue.worker.pro.enabled }}
+        - name: license
+          secret:
+            defaultMode: 420
+            secretName: openfaas-license
+        {{- end }}
+{{ end }}

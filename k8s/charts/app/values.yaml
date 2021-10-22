@@ -1,0 +1,58 @@
+function:
+  image:
+    repository: ''
+    tag: ''
+    digest: null
+
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+  annotations: {}
+  environment: {}
+  labels: {}
+  secrets: []
+
+  # NOTE: this diverges from standard helm resources because we support
+  # multi-arch deployments, and docker produces different manifests with
+  # different digests per platform
+  targets:
+  - os: linux
+    arch: amd64
+    digest: ''
+
+queue:
+  # whether or not to create a custom queue
+  enabled: false
+  # the name of the custom queue
+  name: ""
+  # how long to wait for a response
+  ackWait: 3m
+  # the maximum amount of invocations at once
+  # NOTE: should NOT exceed max pod count * max_inflight per pod
+  maxInflight: 1
+  ## Retries (PRO enabled)
+  # start duration for how long to wait between retry attempts
+  initialRetryWait: 10s
+  # max duration for how long to wait between retry attempts
+  maxRetryWait: 120s
+  # maximum number of retry attempts
+  maxRetryAttempts: 1000
+  # status codes which returned by the watchdog/function will trigger a retry
+  retryHTTPCodes: 408,429,502,503,504
+
+  ## Queue worker
+  worker:
+    repository: ghcr.io/openfaas/queue-worker
+    tag: "0.12.4"
+
+    replicas: 1
+
+    pro:
+      enabled: false
+      repository: ghcr.io/openfaas/queue-worker-pro
+      tag: "0.1.0-rc4"

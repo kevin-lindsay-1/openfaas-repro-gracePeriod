@@ -1,0 +1,16 @@
+# builds
+build
+
+# helm
+.helmfile
+k8s.out
+k8s/out
+
+# openfaas
+/template
+
+# tilt
+tilt_modules
+
+# misc
+.DS_Store

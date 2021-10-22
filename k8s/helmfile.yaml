@@ -1,0 +1,10 @@
+bases:
+- ./common/environments.yaml
+- ./common/defaults.yaml
+---
+releases:
+- name: sleep
+  chart: ./charts/app
+  namespace: openfaas-fn
+  values:
+  - {{ toYaml .Values | indent 4 | trim }}

@@ -1,0 +1,9 @@
+helmDefaults:
+  # rollback on failure
+  atomic: true
+  # clean up resources created in newest diff if there is a failure
+  cleanupOnFail: true
+  # wait for resources to be created and running
+  wait: true
+  # wait for jobs to complete
+  waitForJobs: true

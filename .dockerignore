@@ -1,0 +1,22 @@
+# NOTE: this dockerignore will be moved up a level after the function is
+# shrinkwrapped. Its current directory will be shrinkwrapped into the `function`
+# directory.
+
+# standard for golang-http templates
+**/.DS_Store
+**/.git
+**/.gitignore
+**/.gitlab-ci.yml
+**/.meta
+**/.tiltignore
+**/.vscode
+**/.yarn/sdks
+**/.yarn/install_state.gz
+**/k8s.out
+**/node_modules
+**/tilt_config.json
+**/Tiltfile
+function/k8s
+function/tilt
+function/template
+function/vendor/github.com/openfaas-incubator/go-function-sdk

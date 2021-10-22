@@ -1,0 +1,68 @@
+{{ $functionName := "sleep" }}
+{{ $maxInflightPerPod := 1 }}
+{{ $maxPods := 100 }}
+{{ $timeoutHours := 0 }}
+{{ $timeoutMinutes := 5 }}
+{{ $timeoutSeconds := 0 }}
+{{ $customQueue := false }}
+
+# Calculated variables
+{{ $maxInflightForQueue := mul $maxInflightPerPod $maxPods | add 1 }}
+{{ $timeout := add $timeoutSeconds ($timeoutMinutes | mul 60) ($timeoutHours | mul 60 | mul 60) }}
+{{ $timeoutDuration := $timeout | int64 | duration }}
+
+function:
+  name: {{ $functionName }}
+
+  image:
+    repository: ''
+
+  annotations:
+    {{- if $customQueue }}
+    com.openfaas.queue: {{ $functionName }}
+    {{- end }}
+
+  labels:
+    # Autoscale minimum. Defaults to 1.
+    com.openfaas.scale.min: 1
+    # Autoscale maximum. Defaults to 20.
+    com.openfaas.scale.max: {{ $maxPods }}
+    # Autoscale factor. Defaults to 20 (percent).
+    com.openfaas.scale.factor: 20
+    # Whether or not to enable scale-to-zero. Defaults to false.
+    com.openfaas.scale.zero: false
+
+  environment:
+    ## specific to this function
+    # duration in which to sleep by default
+    SLEEP_DURATION: 2m
+    ## OpenFaaS
+    # Amount of request a function pod is allowed to handle at once
+    max_inflight: {{ $maxInflightPerPod }}
+    # Maximum time to read HTTP request
+    read_timeout: {{ $timeoutDuration }}
+    # Maximum time to write HTTP response
+    write_timeout: {{ $timeoutDuration }}
+    # Maximum duration of upstream function call
+    upstream_timeout: {{ $timeout | add -5 | duration }}
+    # Maximum duration a function can run before being terminated
+    exec_timeout: {{ $timeoutDuration }}
+    # Whether or not to add a prefix to what you log out in the function
+    prefix_logs: false
+
+  requests:
+    cpu: 25m
+    memory: 64Mi
+  limits:
+    cpu: 50m
+    memory: 96Mi
+
+queue:
+  enabled: {{ $customQueue }}
+  name: {{ $functionName }}
+  ackWait: {{ $timeout | add 10 | duration }}
+  maxInflight: {{ $maxInflightForQueue }}
+
+  worker:
+    pro:
+      enabled: true
